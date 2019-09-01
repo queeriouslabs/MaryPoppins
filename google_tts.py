@@ -9,6 +9,11 @@ from subprocess import call
 
 def say(lang, lines):
 
+    say_with_permission(lang, lines, lambda: True)
+
+
+def say_with_permission(lang, lines, should_continue):
+
     say_sequence = []
 
     for line in lines:
@@ -27,7 +32,12 @@ def say(lang, lines):
 
     try:
         for file in say_sequence:
-            call('mpg123 %s 2>/dev/null' % file, shell=True)
+            if not should_continue():
+                break
+            else:
+                call('mpg123 %s 2>/dev/null' % file, shell=True)
     except:
-        for file in say_sequence:
-            os.remove(file)
+        pass
+
+    for file in say_sequence:
+        os.remove(file)
