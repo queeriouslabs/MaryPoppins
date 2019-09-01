@@ -1,0 +1,21 @@
+Variables:
+  $HACKERSPACE
+  $TRANSITSYSTEM
+  $TIMES
+  $TWEET
+
+Thank you for hacking at $HACKERSPACE
+
+The time now is %H:%M on %A %B %-d`DaySuffix` %Y
+
+Up coming $TRANSITSYSTEM times.
+
+$TIMES
+
+I last tweeted.
+
+$TWEET
+
+The time now is %H:%M on %A %B %-d`DaySuffix` %Y
+
+Be excellent to each other, hack the planet, and remember to donate to $HACKERSPACE.
