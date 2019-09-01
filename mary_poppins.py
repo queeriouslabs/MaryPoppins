@@ -172,7 +172,8 @@ def random_quote():
               'Remember... hacking is more than just a crime... it\'s a survival trait.',
               'Never fear, I is here.',
               ['FYI man, alright. You could sit at home, and do like...',  'absolutely nothing, and your name goes through like 17 computers a day...',
-                  '1984? Yeah right, man. That\'s a typo. Orwell is here now. He\'s livin\' large.', 'We have no names, man. No names. We are nameless!'],
+                  '1984? Yeah right, man. That\'s a typo. Orwell is here now. He\'s livin\' large.', 'We have no names, man. No names. We are nameless!',
+                  'Can I score a fry?'],
               ]
 
     return random.choice(quotes)
@@ -183,6 +184,7 @@ class MaryPoppins:
     def __init__(self):
         self.mute_time = None
         self.talk_thread = None
+        self.last_said = []
 
     def unmute(self):
         self.mute_time = None
@@ -208,7 +210,7 @@ class MaryPoppins:
         try:
             while True:
 
-                if datetime.datetime.now().minute in [0, 30]:
+                if True:  # datetime.datetime.now().minute in [0, 30]:
                     if not self.should_speak():
                         print('Currently muted.')
                     else:
@@ -224,6 +226,11 @@ class MaryPoppins:
                         sentences += outro(should_repeat_time(sentences))
 
                         quote = random_quote()
+
+                        self.last_said = sentences + \
+                            [' '.join(quote)
+                             if isinstance(quote, list)
+                             else quote]
 
                         print()
                         print(16 * '=')
@@ -271,12 +278,18 @@ def mary_status():
 
     page = '''
 <html>
+  <head>
+    <meta http-equiv="refresh" content="30;URL='/'" />
+  </head>
   <body>
     <h1>Mary Poppins is currently %s.</h1>
     <h2>All mutes take effect at the end of the current line Mary Poppins is saying.</h2>
     <h1><a href="/%s">Click here to %s Mary Poppins.</a></h1>
+    <hr/>
+    <h3>Most recent info:</h3>
+    <p>%s</p>
   </body>
-</html>''' % (mute_status, mute_action, mute_action)
+</html>''' % (mute_status, mute_action, mute_action, '<br/>'.join(mary.last_said))
 
     return page
 
