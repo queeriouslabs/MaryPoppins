@@ -7,6 +7,7 @@ import time
 import random
 from flask import Flask, redirect, url_for
 import threading
+from subprocess import call
 import google_tts
 
 #
@@ -179,6 +180,25 @@ def random_quote():
     return random.choice(quotes)
 
 
+def with_temporary_volume(callback):
+    # amixer_output = call('amixer sget PCM,0', shell=True)
+    amixer_output = '''
+Simple mixer control 'PCM',0
+  Capabilities: pvolume pvolume-joined pswitch pswitch-joined
+  Playback channels: Mono
+  Limits: Playback -10239 - 400
+  Mono: Playback -52 [96%] [-0.52dB] [on]'''
+
+    m = re.search('\[(\d+)%\]', amixer_output)
+    if m:
+        old = m.group(1)
+        print(old)
+
+        # call('amixer set PCM,0 50%', shell=True)
+        callback()
+        # call('amixer set PCM,0 %s%'%old, shell=True)
+
+
 class MaryPoppins:
 
     def __init__(self):
@@ -240,15 +260,20 @@ class MaryPoppins:
                         print(' '.join(quote) if isinstance(
                             quote, list) else quote)
 
-                        google_tts.say_with_permission(
-                            'en', sentences, lambda: self.should_speak())
+                        with_temporary_volume(
+                            lambda:
+                            google_tts.say_with_permission(
+                                'en', sentences, lambda: self.should_speak()))
 
                         time.sleep(1)
 
-                        google_tts.say_with_permission(
-                            'en',
-                            quote if isinstance(quote, list) else [quote],
-                            lambda: self.should_speak())
+                        with_temporary_volume(
+                            lambda:
+                            google_tts.say_with_permission(
+                                'en',
+                                quote if isinstance(
+                                    quote, list) else [quote],
+                                lambda: self.should_speak()))
 
                 time.sleep(5)
         except KeyboardInterrupt:
