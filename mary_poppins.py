@@ -260,16 +260,23 @@ app = Flask(__name__)
 def mary_status():
     global mary
 
+    if mary.mute_time is None:
+        mute_status = '<span style="color: #00CC00;">unmuted</span>'
+        mute_action = 'mute'
+    else:
+        mute_finish = mary.mute_time + datetime.timedelta(seconds=3600)
+        mute_status = '<span style="color: red;">muted</span> until %i:%i' % \
+            (mute_finish.hour % 12, mute_finish.minute)
+        mute_action = 'unmute'
+
     page = '''
 <html>
   <body>
-    <h1>Mary Poppins is currently <span style="color: red;">%s</span>.</h1>
+    <h1>Mary Poppins is currently %s.</h1>
     <h2>All mutes take effect at the end of the current line Mary Poppins is saying.</h2>
     <h1><a href="/%s">Click here to %s Mary Poppins.</a></h1>
   </body>
-</html>''' % ('unmuted' if mary.mute_time is None else 'muted',
-              'mute' if mary.mute_time is None else 'unmute',
-              'mute' if mary.mute_time is None else 'unmute')
+</html>''' % (mute_status, mute_action, mute_action)
 
     return page
 
