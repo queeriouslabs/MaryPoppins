@@ -126,7 +126,7 @@ def main():
 
     twitter_api = TwitterAPI()
 
-    last_tweet = re.sub('(ftp://|http://|https://)\S+',
+    last_tweet = re.sub('(ftp://|http://|https://)\S+|…',
                         ' ', twitter_api.get_last_tweet())
 
     sentences += ['I last tweeted...',
