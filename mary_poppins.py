@@ -3,6 +3,10 @@ import re
 import requests
 from lxml import html
 import datetime
+import time
+import random
+from flask import Flask, redirect, url_for
+import threading
 import google_tts
 
 #
@@ -104,40 +108,184 @@ class TwitterAPI:
             return None
 
 
-def main():
-    bart_api = BART_API('MW9S-E7SL-26DU-VV8V', 'civc')
+def bart_info():
 
+    bart_api = BART_API('MW9S-E7SL-26DU-VV8V', 'civc')
     departure_info = bart_api.get_next_trains()
 
-    sentences = []
+    if departure_info is None:
+        sentences = ['There are currently no BART trains running...']
+    else:
+        sentences = ['Upcoming BART times...']
+        for dir in departure_info:
+            sentences += ['The next %sbound trains are...' % dir]
+            seen = False
+            for departure in departure_info[dir]:
+                sentences += ['%s train in %i %s...' % (
+                    re.sub('[^a-zA-Z]', ' ', departure[0]), departure[1], 'minute' if departure[1] == 1 else 'minutes')]
 
-    dt = datetime.datetime.now()
-    sentences += ['Thank you for hacking at Queerious Labs...',
-                  dt.strftime('The time now is %I:%M %p on %A %B %-d, %Y...'),
-                  'Upcoming BART times...',
-                  ]
+    return sentences
 
-    for dir in departure_info:
-        sentences += ['The next %sbound trains are...' % dir]
-        seen = False
-        for departure in departure_info[dir]:
-            sentences += ['%s train in %i %s...' % (
-                re.sub('[^a-zA-Z]', ' ', departure[0]), departure[1], 'minute' if departure[1] == 1 else 'minutes')]
+
+def tweet_info():
 
     twitter_api = TwitterAPI()
 
     last_tweet = re.sub('(ftp://|http://|https://)\S+|…',
                         ' ', twitter_api.get_last_tweet())
 
-    sentences += ['I last tweeted...',
-                  last_tweet,
-                  dt.strftime('The time now is %I:%M %p on %A %B %-d, %Y...'),
-                  'Be excellent to each other, hack the planet, and remember to donate to Queerious Labs...']
-
-    print()
-    print('\n'.join(sentences))
-
-    google_tts.say('en', sentences)
+    return ['I last tweeted...',
+            last_tweet]
 
 
-main()
+def intro():
+
+    dt = datetime.datetime.now()
+
+    return ['Thank you for hacking at Queerious Labs...',
+            dt.strftime(
+                'The time now is %I:%M %p on %A %B %-d, %Y...'),
+            ]
+
+
+def should_repeat_time(xs):
+    return len(xs) > 3
+
+
+def outro(repeat):
+
+    if repeat:
+        dt = datetime.datetime.now()
+        sentences = [dt.strftime(
+            'The time now is %I:%M %p on %A %B %-d, %Y...')]
+    else:
+        sentences = []
+
+    sentences += ['Hack the planet, and remember to donate to Queerious Labs...']
+
+    return sentences
+
+
+def random_quote():
+
+    quotes = ['Never send a boy to do a woman\'s job.',
+              'Remember... hacking is more than just a crime... it\'s a survival trait.',
+              'Never fear, I is here.',
+              ['FYI man, alright. You could sit at home, and do like...',  'absolutely nothing, and your name goes through like 17 computers a day...',
+                  '1984? Yeah right, man. That\'s a typo. Orwell is here now. He\'s livin\' large.', 'We have no names, man. No names. We are nameless!'],
+              ]
+
+    return random.choice(quotes)
+
+
+class MaryPoppins:
+
+    def __init__(self):
+        self.mute_time = None
+        self.talk_thread = None
+
+    def unmute(self):
+        self.mute_time = None
+        print('Mary is now unmuted.')
+
+    def mute(self):
+        self.mute_time = datetime.datetime.now()
+        print('Mary is now muted until ' + str(self.mute_time))
+
+    def clear_old_mute_time(self):
+        if self.mute_time is not None and \
+                (datetime.datetime.now() - self.mute_time).seconds > 3600:
+            self.unmute()
+
+    def should_speak(self):
+        self.clear_old_mute_time()
+        return self.mute_time is None
+
+    def main(self):
+
+        print('Main Mary Poppins loop running...')
+
+        try:
+            while True:
+
+                if datetime.datetime.now().minute in [0, 30]:
+                    if not self.should_speak():
+                        print('Currently muted.')
+                    else:
+
+                        sentences = []
+
+                        sentences += intro()
+
+                        sentences += bart_info()
+
+                        sentences += tweet_info()
+
+                        sentences += outro(should_repeat_time(sentences))
+
+                        quote = random_quote()
+
+                        print()
+                        print(16 * '=')
+                        print()
+                        print('\n'.join(sentences))
+                        print()
+                        print(' '.join(quote) if isinstance(
+                            quote, list) else quote)
+
+                        google_tts.say_with_permission(
+                            'en', sentences, lambda: self.should_speak())
+
+                        time.sleep(1)
+
+                        google_tts.say_with_permission(
+                            'en',
+                            quote if isinstance(quote, list) else [quote],
+                            lambda: self.should_speak())
+
+                time.sleep(5)
+        except KeyboardInterrupt:
+            pass
+
+
+mary = MaryPoppins()
+
+t = threading.Thread(target=mary.main)
+t.start()
+
+app = Flask(__name__)
+
+
+@app.route('/')
+def mary_status():
+    global mary
+
+    page = '''
+<html>
+  <body>
+    <h1>Mary Poppins is currently <span style="color: red;">%s</span>.</h1>
+    <h2>All mutes take effect at the end of the current line Mary Poppins is saying.</h2>
+    <h1><a href="/%s">Click here to %s Mary Poppins.</a></h1>
+  </body>
+</html>''' % ('unmuted' if mary.mute_time is None else 'muted',
+              'mute' if mary.mute_time is None else 'unmute',
+              'mute' if mary.mute_time is None else 'unmute')
+
+    return page
+
+
+@app.route('/mute')
+def mute_mary():
+    global mary
+    mary.mute()
+    return redirect(url_for('mary_status'))
+
+
+@app.route('/unmute')
+def unmute_mary():
+    global mary
+    mary.unmute()
+    return redirect(url_for('mary_status'))
+
+
+app.run(host='0.0.0.0', port=5000)
