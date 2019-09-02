@@ -180,22 +180,29 @@ def random_quote():
     return random.choice(quotes)
 
 
+def get_volume():
+    if 0 == subprocess.call('which amixer', shell=True):
+        amixer_output = subprocess.check_output(
+            'amixer sget PCM,0', shell=True).decode('utf-8')
+        m = re.search('\[(\d+)%\]', amixer_output)
+        if m:
+            return m.group(1)
+        else:
+            return 75
+    else:
+        return 75
+
+
+def set_volume(vol):
+    if 0 == subprocess.call('which amixer', shell=True):
+        subprocess.call('amixer set PCM,0 ' + str(vol) + '%', shell=True)
+
+
 def with_temporary_volume(vol, callback):
-    # amixer_output = subprocess.check_output('amixer sget PCM,0', shell=True)
-    amixer_output = '''
-Simple mixer control 'PCM',0
-  Capabilities: pvolume pvolume-joined pswitch pswitch-joined
-  Playback channels: Mono
-  Limits: Playback -10239 - 400
-  Mono: Playback -52 [96%] [-0.52dB] [on]'''
-
-    m = re.search('\[(\d+)%\]', amixer_output)
-    if m:
-        old = m.group(1)
-
-        # subprocess.call('amixer set PCM,0 ' + str(vol) + '%', shell=True)
-        callback()
-        # subprocess.call('amixer set PCM,0 ' + old + '%', shell=True)
+    old = get_volume()
+    set_volume(vol)
+    callback()
+    set_volume(old)
 
 
 class MaryPoppins:
