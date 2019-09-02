@@ -239,8 +239,9 @@ class MaryPoppins:
 
         try:
             while True:
+                dt = datetime.datetime.now()
 
-                if datetime.datetime.now().minute in [0, 30]:
+                if dt.hour in range(19, 24) and dt.minute in [0, 30]:
                     if not self.should_speak():
                         print('Currently muted.')
                     else:
