@@ -235,7 +235,6 @@ class MaryPoppins:
     def should_speak(self):
         self.clear_old_mute_time()
         dt = datetime.datetime.now()
-
         return self.mute_time is None and (dt.hour, dt.minute) in self.valid_times
 
     def main(self):
@@ -270,22 +269,19 @@ class MaryPoppins:
                     print(' '.join(quote) if isinstance(
                         quote, list) else quote)
 
-                    with_temporary_volume(
+                    google_tts.say_with_permission(
                         mary.volume,
-                        lambda:
-                        google_tts.say_with_permission(
-                            'en', sentences, lambda: self.should_speak()))
+                        'en',
+                        sentences,
+                        lambda: self.should_speak())
 
                     time.sleep(1)
 
-                    with_temporary_volume(
+                    google_tts.say_with_permission(
                         mary.volume,
-                        lambda:
-                        google_tts.say_with_permission(
-                            'en',
-                            quote if isinstance(
-                                quote, list) else [quote],
-                            lambda: self.should_speak()))
+                        'en',
+                        quote if isinstance(quote, list) else [quote],
+                        lambda: self.should_speak())
 
                 time.sleep(5)
         except KeyboardInterrupt:
@@ -331,7 +327,7 @@ def mary_status():
     <hr/>
     <h2>System Info</h2>
     <h3>Set Volume</h3>
-    <p>The current play volume is %i</p>
+    <p>The current play volume is <b>%i</b></p>
     <p>
         <a href="/vol/70">70%%</a>&nbsp;&nbsp;&nbsp;&nbsp;
         <a href="/vol/75">75%%</a>&nbsp;&nbsp;&nbsp;&nbsp;

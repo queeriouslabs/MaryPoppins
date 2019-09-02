@@ -7,12 +7,12 @@ import re
 from subprocess import call
 
 
-def say(lang, lines):
+def say(vol, lang, lines):
 
-    say_with_permission(lang, lines, lambda: True)
+    say_with_permission(vol, lang, lines, lambda: True)
 
 
-def say_with_permission(lang, lines, should_continue):
+def say_with_permission(vol, lang, lines, should_continue):
 
     say_sequence = []
 
@@ -35,7 +35,8 @@ def say_with_permission(lang, lines, should_continue):
             if not should_continue():
                 break
             else:
-                call('mpg123 %s 2>/dev/null' % file, shell=True)
+                call('mplayer %s -volume %i 2>/dev/null' %
+                     (file, vol), shell=True)
         for file in say_sequence:
             os.remove(file)
 
