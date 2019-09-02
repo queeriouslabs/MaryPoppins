@@ -8,6 +8,7 @@ import random
 from flask import Flask, redirect, url_for
 import threading
 import subprocess
+import sys
 import google_tts
 
 #
@@ -213,7 +214,8 @@ def with_temporary_volume(vol, callback):
 
 class MaryPoppins:
 
-    def __init__(self):
+    def __init__(self, debug_mode=False):
+        self.debug_mode = debug_mode
         self.mute_time = None
         self.talk_thread = None
         self.last_said = []
@@ -241,7 +243,6 @@ class MaryPoppins:
     def should_speak(self):
         self.clear_old_mute_time()
         dt = datetime.datetime.now()
-        return True
         return self.mute_time is None and (dt.hour, dt.minute) in self.valid_times
 
     def main(self):
@@ -250,7 +251,7 @@ class MaryPoppins:
 
         try:
             while True:
-                if self.should_speak():
+                if self.should_speak() or self.debug_mode:
                     sentences = []
 
                     sentences += intro()
@@ -297,7 +298,10 @@ class MaryPoppins:
             pass
 
 
-mary = MaryPoppins()
+if '--debug' in sys.argv:
+    mary = MaryPoppins(True)
+else:
+    mary = MaryPoppins()
 
 t = threading.Thread(target=mary.main)
 t.start()
