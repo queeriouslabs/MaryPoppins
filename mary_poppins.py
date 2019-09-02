@@ -256,13 +256,15 @@ class MaryPoppins:
 
                     sentences += intro()
 
-                    sentences += bart_info()
+                    if not self.debug_mode:
+                        sentences += bart_info()
+                        sentences += tweet_info()
+                        sentences += outro(should_repeat_time(sentences))
 
-                    sentences += tweet_info()
-
-                    sentences += outro(should_repeat_time(sentences))
-
-                    quote = random_quote()
+                    if not self.debug_mode:
+                        quote = random_quote()
+                    else:
+                        quote = []
 
                     self.last_said = sentences + \
                         [' '.join(quote)
