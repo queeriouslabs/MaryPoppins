@@ -277,21 +277,24 @@ class MaryPoppins:
                     print(' '.join(quote) if isinstance(
                         quote, list) else quote)
 
-                    google_tts.say_with_permission(
-                        mary.volume,
-                        'en',
-                        sentences,
-                        lambda: self.should_speak() or self.debug_mode,
-                        download_done=lambda: subprocess.call(
-                            'mplayer chime.wav -volume %i' % mary.volume, shell=True))
+                    with_temporary_volume(self.volume,
+                                          lambda:
+                                          google_tts.say_with_permission(
+                                              mary.volume,
+                                              'en',
+                                              sentences,
+                                              lambda: self.should_speak() or self.debug_mode,
+                                              download_done=lambda: subprocess.call('mpg123 chime.mp3', shell=True)))
 
                     time.sleep(1)
 
-                    google_tts.say_with_permission(
-                        mary.volume,
-                        'en',
-                        quote if isinstance(quote, list) else [quote],
-                        lambda: self.should_speak() or self.debug_mode)
+                    with_temporary_volume(self.volume, lambda:
+                                          google_tts.say_with_permission(
+                                              mary.volume,
+                                              'en',
+                                              quote if isinstance(
+                                                  quote, list) else [quote],
+                                              lambda: self.should_speak() or self.debug_mode))
 
                 time.sleep(5)
         except KeyboardInterrupt:
@@ -318,8 +321,8 @@ def mary_status():
         mute_action = 'mute'
     else:
         mute_finish = mary.mute_time + datetime.timedelta(seconds=3600)
-        mute_status = '<span style="color: red;">muted</span> until %i:%i' % \
-            (mute_finish.hour % 12, mute_finish.minute)
+        mute_status = '<span style="color: red;">muted</span> until %i:%i' % (
+            mute_finish.hour % 12, mute_finish.minute)
         mute_action = 'unmute'
 
     play_times = '\n'.join([

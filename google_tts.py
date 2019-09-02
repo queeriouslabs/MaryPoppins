@@ -41,8 +41,7 @@ def say_with_permission(vol, lang, lines, should_continue, download_done=None):
             if not should_continue():
                 break
             else:
-                call('mplayer %s -volume %i 2>/dev/null' %
-                     (file, vol), shell=True)
+                call('mpg123 %s 2>/dev/null' % file, shell=True)
         for file in say_sequence:
             os.remove(file)
 
