@@ -186,7 +186,7 @@ def get_volume():
             'amixer sget PCM,0', shell=True).decode('utf-8')
         m = re.search('\[(\d+)%\]', amixer_output)
         if m:
-            return m.group(1)
+            return int(m.group(1))
         else:
             return 75
     else:
