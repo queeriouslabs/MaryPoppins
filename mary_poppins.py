@@ -89,9 +89,15 @@ class TwitterAPI:
     def get_last_tweet(self):
         url = 'https://twitter.com/QueeriousLabs'
 
-        r = requests.get(url)
-        if r.status_code != 200:
-            return None
+        while True:
+            try:
+                r = requests.get(url)
+                if r.status_code != 200:
+                    return None
+                else:
+                    break
+            except:
+                pass
 
         try:
             root = html.fromstring(r.text)
@@ -235,6 +241,7 @@ class MaryPoppins:
     def should_speak(self):
         self.clear_old_mute_time()
         dt = datetime.datetime.now()
+        return True
         return self.mute_time is None and (dt.hour, dt.minute) in self.valid_times
 
     def main(self):
@@ -268,6 +275,9 @@ class MaryPoppins:
                     print()
                     print(' '.join(quote) if isinstance(
                         quote, list) else quote)
+
+                    subprocess.call(
+                        'mplayer chime.wav -volume %i' % mary.volume, shell=True)
 
                     google_tts.say_with_permission(
                         mary.volume,
