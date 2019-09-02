@@ -240,10 +240,14 @@ class MaryPoppins:
                 (datetime.datetime.now() - self.mute_time).seconds > 3600:
             self.unmute()
 
-    def should_speak(self):
+    def is_muted(self):
         self.clear_old_mute_time()
         dt = datetime.datetime.now()
-        return self.mute_time is None and (dt.hour, dt.minute) in self.valid_times
+        return self.mute_time is not None
+
+    def should_speak(self):
+
+        return not self.is_muted() and (dt.hour, dt.minute) in self.valid_times
 
     def main(self):
 
@@ -285,7 +289,7 @@ class MaryPoppins:
                                               mary.volume,
                                               'en',
                                               sentences,
-                                              lambda: self.should_speak() or self.debug_mode,
+                                              lambda: self.is_muted() or self.debug_mode,
                                               download_done=lambda: subprocess.call('mpg123 chime.mp3', shell=True)))
 
                     time.sleep(1)
@@ -296,7 +300,7 @@ class MaryPoppins:
                                               'en',
                                               quote if isinstance(
                                                   quote, list) else [quote],
-                                              lambda: self.should_speak() or self.debug_mode))
+                                              lambda: self.is_muted() or self.debug_mode))
 
                 time.sleep(5)
         except KeyboardInterrupt:
