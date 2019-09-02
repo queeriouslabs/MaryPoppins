@@ -212,6 +212,9 @@ class MaryPoppins:
         self.talk_thread = None
         self.last_said = []
         self.volume = 85
+        self.valid_times = [(h, m)
+                            for h in [19, 20, 21, 22, 23, 0]
+                            for m in [0, 30]]
 
     def unmute(self):
         self.mute_time = None
@@ -231,7 +234,9 @@ class MaryPoppins:
 
     def should_speak(self):
         self.clear_old_mute_time()
-        return self.mute_time is None
+        dt = datetime.datetime.now()
+
+        return self.mute_time is None and (dt.hour, dt.minute) in self.valid_times
 
     def main(self):
 
@@ -239,54 +244,48 @@ class MaryPoppins:
 
         try:
             while True:
-                dt = datetime.datetime.now()
+                if self.should_speak():
+                    sentences = []
 
-                if dt.hour in range(19, 24) and dt.minute in [0, 30]:
-                    if not self.should_speak():
-                        print('Currently muted.')
-                    else:
+                    sentences += intro()
 
-                        sentences = []
+                    sentences += bart_info()
 
-                        sentences += intro()
+                    sentences += tweet_info()
 
-                        sentences += bart_info()
+                    sentences += outro(should_repeat_time(sentences))
 
-                        sentences += tweet_info()
+                    quote = random_quote()
 
-                        sentences += outro(should_repeat_time(sentences))
+                    self.last_said = sentences + \
+                        [' '.join(quote)
+                         if isinstance(quote, list)
+                         else quote]
 
-                        quote = random_quote()
+                    print()
+                    print(16 * '=')
+                    print()
+                    print('\n'.join(sentences))
+                    print()
+                    print(' '.join(quote) if isinstance(
+                        quote, list) else quote)
 
-                        self.last_said = sentences + \
-                            [' '.join(quote)
-                             if isinstance(quote, list)
-                             else quote]
+                    with_temporary_volume(
+                        mary.volume,
+                        lambda:
+                        google_tts.say_with_permission(
+                            'en', sentences, lambda: self.should_speak()))
 
-                        print()
-                        print(16 * '=')
-                        print()
-                        print('\n'.join(sentences))
-                        print()
-                        print(' '.join(quote) if isinstance(
-                            quote, list) else quote)
+                    time.sleep(1)
 
-                        with_temporary_volume(
-                            mary.volume,
-                            lambda:
-                            google_tts.say_with_permission(
-                                'en', sentences, lambda: self.should_speak()))
-
-                        time.sleep(1)
-
-                        with_temporary_volume(
-                            mary.volume,
-                            lambda:
-                            google_tts.say_with_permission(
-                                'en',
-                                quote if isinstance(
-                                    quote, list) else [quote],
-                                lambda: self.should_speak()))
+                    with_temporary_volume(
+                        mary.volume,
+                        lambda:
+                        google_tts.say_with_permission(
+                            'en',
+                            quote if isinstance(
+                                quote, list) else [quote],
+                            lambda: self.should_speak()))
 
                 time.sleep(5)
         except KeyboardInterrupt:
@@ -314,6 +313,12 @@ def mary_status():
             (mute_finish.hour % 12, mute_finish.minute)
         mute_action = 'unmute'
 
+    play_times = '\n'.join([
+        '        <li>' + str(h % 12 if h != 0 else 12) + ':' + (2 - len(str(m))) *
+        '0' + str(m) + (' am' if h < 12 else ' pm') + '</li >'
+        for h, m in mary.valid_times
+    ])
+
     page = '''
 <html>
   <head>
@@ -324,6 +329,7 @@ def mary_status():
     <h2>All mutes take effect at the end of the current line Mary Poppins is saying.</h2>
     <h1><a href="/%s">Click here to %s Mary Poppins.</a></h1>
     <hr/>
+    <h2>System Info</h2>
     <h3>Set Volume</h3>
     <p>The current play volume is %i</p>
     <p>
@@ -334,11 +340,15 @@ def mary_status():
         <a href="/vol/90">90%%</a>&nbsp;&nbsp;&nbsp;&nbsp;
         <a href="/vol/95">95%%</a>
     </p>
-    <hr/>
-    <h3>Most recent info:</h3>
+    <h3>Announcement Times</h3>
+    <p>Mary Poppins makes announcements at the following times:</p>
+    <ul>
+%s
+    </ul>
+    <h3>Most recent announcement:</h3>
     <p>%s</p>
   </body>
-</html>''' % (mute_status, mute_action, mute_action, mary.volume, '<br/>'.join(mary.last_said))
+</html>''' % (mute_status, mute_action, mute_action, mary.volume, play_times, '<br/>'.join(mary.last_said))
 
     return page
 
