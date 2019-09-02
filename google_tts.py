@@ -38,6 +38,7 @@ def say_with_permission(vol, lang, lines, should_continue, download_done=None):
 
     try:
         for file in say_sequence:
+            print('Saying ' + file)
             if not should_continue():
                 break
             else:
