@@ -211,7 +211,7 @@ class MaryPoppins:
         self.mute_time = None
         self.talk_thread = None
         self.last_said = []
-        self.volume = 90
+        self.volume = 85
 
     def unmute(self):
         self.mute_time = None
@@ -240,7 +240,7 @@ class MaryPoppins:
         try:
             while True:
 
-                if True:  # datetime.datetime.now().minute in [0, 30]:
+                if datetime.datetime.now().minute in [0, 30]:
                     if not self.should_speak():
                         print('Currently muted.')
                     else:
