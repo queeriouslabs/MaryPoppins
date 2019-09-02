@@ -281,7 +281,7 @@ class MaryPoppins:
                         mary.volume,
                         'en',
                         sentences,
-                        lambda: self.should_speak(),
+                        lambda: self.should_speak() or self.debug_mode,
                         download_done=lambda: subprocess.call(
                             'mplayer chime.wav -volume %i' % mary.volume, shell=True))
 
@@ -291,7 +291,7 @@ class MaryPoppins:
                         mary.volume,
                         'en',
                         quote if isinstance(quote, list) else [quote],
-                        lambda: self.should_speak())
+                        lambda: self.should_speak() or self.debug_mode)
 
                 time.sleep(5)
         except KeyboardInterrupt:
