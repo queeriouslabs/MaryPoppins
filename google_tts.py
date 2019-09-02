@@ -5,6 +5,7 @@ import string
 import os
 import re
 from subprocess import call
+import requests_retry
 
 
 def say(vol, lang, lines, download_done=None):
@@ -24,9 +25,9 @@ def say_with_permission(vol, lang, lines, should_continue, download_done=None):
             lang, line[0:200])
         output = 'files/' + ''.join(random.choice(string.hexdigits)
                                     for i in range(32)) + '.mp3'
-        r = requests.get(url)
+        r = requests_retry.get(url)
 
-        if 200 == r.status_code:
+        if r and 200 == r.status_code:
             if not os.path.isdir('files'):
                 os.makedirs('files')
             with open(output, 'wb') as f:

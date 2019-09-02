@@ -10,6 +10,7 @@ import threading
 import subprocess
 import sys
 import google_tts
+import requests_retry
 
 #
 # # Transit Info
@@ -38,7 +39,7 @@ class BART_API:
             station, api_key)
 
     def get_next_trains(self):
-        r = requests.get(self.request_url)
+        r = requests_retry.get(self.request_url)
 
         if 200 != r.status_code:
             return None
@@ -92,7 +93,7 @@ class TwitterAPI:
 
         while True:
             try:
-                r = requests.get(url)
+                r = requests_retry.get(url)
                 if r.status_code != 200:
                     return None
                 else:
