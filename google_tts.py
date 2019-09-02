@@ -36,8 +36,11 @@ def say_with_permission(lang, lines, should_continue):
                 break
             else:
                 call('mpg123 %s 2>/dev/null' % file, shell=True)
-    except:
-        pass
+        for file in say_sequence:
+            os.remove(file)
 
-    for file in say_sequence:
-        os.remove(file)
+    except KeyboardInterrupt:
+        for file in say_sequence:
+            os.remove(file)
+
+        raise KeyboardInterrupt

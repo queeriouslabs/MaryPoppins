@@ -7,7 +7,7 @@ import time
 import random
 from flask import Flask, redirect, url_for
 import threading
-from subprocess import call
+import subprocess
 import google_tts
 
 #
@@ -180,8 +180,8 @@ def random_quote():
     return random.choice(quotes)
 
 
-def with_temporary_volume(callback):
-    # amixer_output = call('amixer sget PCM,0', shell=True)
+def with_temporary_volume(vol, callback):
+    # amixer_output = subprocess.check_output('amixer sget PCM,0', shell=True)
     amixer_output = '''
 Simple mixer control 'PCM',0
   Capabilities: pvolume pvolume-joined pswitch pswitch-joined
@@ -192,11 +192,10 @@ Simple mixer control 'PCM',0
     m = re.search('\[(\d+)%\]', amixer_output)
     if m:
         old = m.group(1)
-        print(old)
 
-        # call('amixer set PCM,0 50%', shell=True)
+        # subprocess.call('amixer set PCM,0 ' + str(vol) + '%', shell=True)
         callback()
-        # call('amixer set PCM,0 %s%'%old, shell=True)
+        # subprocess.call('amixer set PCM,0 ' + old + '%', shell=True)
 
 
 class MaryPoppins:
@@ -205,6 +204,7 @@ class MaryPoppins:
         self.mute_time = None
         self.talk_thread = None
         self.last_said = []
+        self.volume = 90
 
     def unmute(self):
         self.mute_time = None
@@ -213,6 +213,9 @@ class MaryPoppins:
     def mute(self):
         self.mute_time = datetime.datetime.now()
         print('Mary is now muted until ' + str(self.mute_time))
+
+    def set_volume(self, vol):
+        self.volume = max(70, vol)
 
     def clear_old_mute_time(self):
         if self.mute_time is not None and \
@@ -261,6 +264,7 @@ class MaryPoppins:
                             quote, list) else quote)
 
                         with_temporary_volume(
+                            mary.volume,
                             lambda:
                             google_tts.say_with_permission(
                                 'en', sentences, lambda: self.should_speak()))
@@ -268,6 +272,7 @@ class MaryPoppins:
                         time.sleep(1)
 
                         with_temporary_volume(
+                            mary.volume,
                             lambda:
                             google_tts.say_with_permission(
                                 'en',
@@ -311,10 +316,21 @@ def mary_status():
     <h2>All mutes take effect at the end of the current line Mary Poppins is saying.</h2>
     <h1><a href="/%s">Click here to %s Mary Poppins.</a></h1>
     <hr/>
+    <h3>Set Volume</h3>
+    <p>The current play volume is %i</p>
+    <p>
+        <a href="/vol/70">70%%</a>&nbsp;&nbsp;&nbsp;&nbsp;
+        <a href="/vol/75">75%%</a>&nbsp;&nbsp;&nbsp;&nbsp;
+        <a href="/vol/80">80%%</a>&nbsp;&nbsp;&nbsp;&nbsp;
+        <a href="/vol/85">85%%</a>&nbsp;&nbsp;&nbsp;&nbsp;
+        <a href="/vol/90">90%%</a>&nbsp;&nbsp;&nbsp;&nbsp;
+        <a href="/vol/95">95%%</a>
+    </p>
+    <hr/>
     <h3>Most recent info:</h3>
     <p>%s</p>
   </body>
-</html>''' % (mute_status, mute_action, mute_action, '<br/>'.join(mary.last_said))
+</html>''' % (mute_status, mute_action, mute_action, mary.volume, '<br/>'.join(mary.last_said))
 
     return page
 
@@ -330,6 +346,13 @@ def mute_mary():
 def unmute_mary():
     global mary
     mary.unmute()
+    return redirect(url_for('mary_status'))
+
+
+@app.route('/vol/<vol>')
+def set_volumne(vol):
+    global mary
+    mary.set_volume(int(vol))
     return redirect(url_for('mary_status'))
 
 
