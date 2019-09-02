@@ -11,6 +11,7 @@ import subprocess
 import sys
 import google_tts
 import requests_retry
+from transmitter import run_transmitter
 
 #
 # # Transit Info
@@ -315,6 +316,8 @@ else:
 t = threading.Thread(target=mary.main)
 t.start()
 
+run_transmitter(5000, 30)
+
 app = Flask(__name__)
 
 
@@ -369,6 +372,14 @@ def mary_status():
 </html>''' % (mute_status, mute_action, mute_action, mary.volume, play_times, '<br/>'.join(mary.last_said))
 
     return page
+
+
+@app.route('/transmitter_info', methods=['GET'])
+def get_transmitter_info():
+    return json.dumps({
+        'name': 'Mary Poppins',
+        'description': 'A program that periodically announces useful information about BART, Twitter, etc.'
+    })
 
 
 @app.route('/mute')
