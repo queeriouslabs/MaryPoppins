@@ -9,6 +9,7 @@ from flask import Flask, redirect, url_for
 import threading
 import subprocess
 import sys
+import os
 import google_tts
 import requests_retry
 from transmitter import run_transmitter
@@ -214,6 +215,11 @@ def with_temporary_volume(vol, callback):
     set_volume(old)
 
 
+def clean_files_directory():
+    for file in os.listdir('files'):
+        os.remove('files/' + file)
+
+
 class MaryPoppins:
 
     def __init__(self, debug_mode=False):
@@ -256,6 +262,8 @@ class MaryPoppins:
 
         try:
             while True:
+                clean_files_directory()
+
                 if self.should_speak() or self.debug_mode:
                     sentences = []
 
