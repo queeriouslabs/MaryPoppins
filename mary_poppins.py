@@ -242,11 +242,10 @@ class MaryPoppins:
 
     def is_muted(self):
         self.clear_old_mute_time()
-        dt = datetime.datetime.now()
         return self.mute_time is not None
 
     def should_speak(self):
-
+        dt = datetime.datetime.now()
         return not self.is_muted() and (dt.hour, dt.minute) in self.valid_times
 
     def main(self):
