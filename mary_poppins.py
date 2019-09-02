@@ -288,7 +288,7 @@ class MaryPoppins:
                                               mary.volume,
                                               'en',
                                               sentences,
-                                              lambda: self.is_muted() or self.debug_mode,
+                                              lambda: not self.is_muted() or self.debug_mode,
                                               download_done=lambda: subprocess.call('mpg123 chime.mp3', shell=True)))
 
                     time.sleep(1)
@@ -299,7 +299,7 @@ class MaryPoppins:
                                               'en',
                                               quote if isinstance(
                                                   quote, list) else [quote],
-                                              lambda: self.is_muted() or self.debug_mode))
+                                              lambda: not self.is_muted() or self.debug_mode))
 
                 time.sleep(5)
         except KeyboardInterrupt:
