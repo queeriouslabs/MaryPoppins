@@ -276,14 +276,13 @@ class MaryPoppins:
                     print(' '.join(quote) if isinstance(
                         quote, list) else quote)
 
-                    subprocess.call(
-                        'mplayer chime.wav -volume %i' % mary.volume, shell=True)
-
                     google_tts.say_with_permission(
                         mary.volume,
                         'en',
                         sentences,
-                        lambda: self.should_speak())
+                        lambda: self.should_speak(),
+                        download_done=lambda: subprocess.call(
+                            'mplayer chime.wav -volume %i' % mary.volume, shell=True))
 
                     time.sleep(1)
 

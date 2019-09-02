@@ -7,12 +7,15 @@ import re
 from subprocess import call
 
 
-def say(vol, lang, lines):
+def say(vol, lang, lines, download_done=None):
 
-    say_with_permission(vol, lang, lines, lambda: True)
+    say_with_permission(
+        vol, lang, lines,
+        should_continue=lambda: True,
+        download_done=download_done)
 
 
-def say_with_permission(vol, lang, lines, should_continue):
+def say_with_permission(vol, lang, lines, should_continue, download_done=None):
 
     say_sequence = []
 
@@ -29,6 +32,9 @@ def say_with_permission(vol, lang, lines, should_continue):
             with open(output, 'wb') as f:
                 f.write(r.content)
             say_sequence += [output]
+
+    if download_done:
+        download_done()
 
     try:
         for file in say_sequence:
