@@ -349,8 +349,14 @@ def mary_status():
         else:
             m = str(m)
 
-        mute_status = '<span style="color: red;">muted</span> until %s:%s' % (
-            h, m)
+        if mute_finish.hour < 12:
+            ampm = 'am'
+        else:
+            ampm = 'pm'
+
+        mute_status = \
+            '<span style="color: red;">muted</span> until %s:%s %s' \
+            % (h, m, ampm)
         mute_action = 'unmute'
 
     play_times = '\n'.join([
