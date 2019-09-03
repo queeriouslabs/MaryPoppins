@@ -1,0 +1,11 @@
+[Unit]
+Description=Mary Poppins
+
+[Service]
+WorkingDirectory=/home/pi/Projects/MaryPoppins/
+User=pi
+Type=simple
+ExecStart=python3 /home/pi/Projects/MaryPoppins/mary_poppins.py
+
+[Install]
+WantedBy=multi-user.target
