@@ -337,15 +337,18 @@ def mary_status():
         mute_status = '<span style="color: #00CC00;">unmuted</span>'
         mute_action = 'mute'
     else:
+        mute_finish = mary.mute_time + datetime.timedelta(seconds=3600)
+
         h = mute_finish.hour % 12
         if h == 0:
             h = 12
+
         m = mute_finish.minute
         if m < 10:
             m = '0' + str(m)
         else:
             m = str(m)
-        mute_finish = mary.mute_time + datetime.timedelta(seconds=3600)
+
         mute_status = '<span style="color: red;">muted</span> until %s:%s' % (
             h, m)
         mute_action = 'unmute'
